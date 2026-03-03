@@ -1,0 +1,25 @@
+# App Registration certificate (legacy CSP)
+New-SelfSignedCertificate `
+  -Subject "CN=AzureAppAuth" `
+  -CertStoreLocation "Cert:\CurrentUser\My" `
+  -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" `
+  -KeyAlgorithm RSA `
+  -KeyLength 2048 `
+  -KeyUsage DigitalSignature `
+  -KeySpec Signature `
+  -NotAfter (Get-Date).AddYears(2)
+
+
+# Get the newest cert by subject
+$cert = Get-ChildItem Cert:\CurrentUser\My |
+  Where-Object Subject -eq "CN=AzureAppAuth" |
+  Sort-Object NotBefore -Descending |
+  Select-Object -First 1
+
+# Export public cert to upload in App Registration
+Export-Certificate -Cert $cert -FilePath "$env:USERPROFILE\Desktop\AzureAppAuth.cer" | Out-Null
+
+# (Optional) Export PFX if you want to use on other machine/automation host
+Export-PfxCertificate -Cert $cert `
+  -FilePath "$env:USERPROFILE\Desktop\AzureAppAuth.pfx" `
+  -Password (Read-Host -AsSecureString "PFX password")
